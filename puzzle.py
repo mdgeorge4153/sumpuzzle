@@ -12,6 +12,9 @@ from typing    import List, Optional
 
 _a, _b, _c, _d, _e, _f, _g = range(7)
 
+def debug(x):
+    print(x)
+
 
 class UnderconstrainedError(Exception):
     def __init__(self, sol1, sol2):
@@ -31,7 +34,7 @@ def check(x, solutions, *indices):
     """
     if solutions is not None:
         correct = sum([solutions[i] for i in indices])
-        assert x == correct, f"incorrect step: computed {x} != expected {correct}"
+        assert x == correct, f"incorrect step: computed {'+'.join(str(solutions[i]) for i in indices)} == {x} != expected {correct}"
 
     return x
 
@@ -229,27 +232,31 @@ def solve7(sums, nums = None):
         ce = ac + eg - ag
         be = ab + eg - ag
         cf = ac + fg - ag
-        if set([bf,ce,be,cf]).issubset(set(sums)) and be < bf < cf and be < ce < cf:
+        if set([bf,ce,be,cf]).issubset(set(sums)) and be <= bf <= cf and be <= ce <= cf:
             candidates1.append((ag,be,bf,ce,cf))
-            check(bf, nums, _b, _f)
-            check(ce, nums, _c, _e)
-            check(be, nums, _b, _e)
-            check(cf, nums, _c, _f)
+            try:
+                check(bf, nums, _b, _f)
+                check(ce, nums, _c, _e)
+                check(be, nums, _b, _e)
+                check(cf, nums, _c, _f)
+            except Exception:
+                pass
 
-    print(f"--- there are {len(candidates1)} candidates for ag: {candidates1}")
+    debug(f"--- there are {len(candidates1)} candidates for ag: {candidates1}")
 
     candidates2 = []
     for ae in sums[3:7]:
         cg = ac + eg - ae
         af = ac + fg - cg
         bg = ab + fg - af
-        if set([cg, af, bg]).issubset(set(sums)) and ae < af < bg < cg:
+        if set([cg, af, bg]).issubset(set(sums)) and ae <= af <= bg <= cg:
             candidates2.append((ae, af, bg, cg))
+            check(ae, nums, _a, _e)
             check(cg, nums, _c, _g)
             check(af, nums, _a, _f)
             check(bg, nums, _b, _g)
 
-    print(f"--- there are {len(candidates2)} candidates for ae: {candidates2}")
+    debug(f"--- there are {len(candidates2)} candidates for ae: {candidates2}")
 
     abcdefg = check(sum(sums)//6, nums, _a, _b, _c, _d, _e, _f, _g)
 
@@ -257,9 +264,11 @@ def solve7(sums, nums = None):
         ag, be, bf, ce, cf = set1
         ae, af, bg, cg     = set2
         filtered = list(sums)
-        for x in [ae, af, ag, be, bf, bg, ce, cf, cg]:
+        known = [ae, af, ag, be, bf, bg, ce, cf, cg]
+        debug(f'known values: {known}')
+        for x in known:
             filtered.remove(x)
-        print(len(filtered))
+        debug(len(filtered))
         abcd = check(sum(filtered[0:6])//3, nums, _a, _b, _c, _d)
 
         d = abcdefg - ag - bf - ce
@@ -273,8 +282,15 @@ def solve7(sums, nums = None):
         f = fg - g
         return [a,b,c,d,e,f,g]
 
-    candidates = [compute(set1, set2) for set1 in candidates1 for set2 in candidates2]
-    print(candidates)
+    candidates = []
+    for set1 in candidates1:
+        for set2 in candidates2:
+            try:
+                candidates.append(compute(set1,set2))
+            except Exception as e:
+                debug(e)
+
+    debug(candidates)
 
     return candidates[0]
 
@@ -291,7 +307,7 @@ def summarize_diffs(sums):
 
     output = list(results.items())
     output.sort(key=lambda p: -p[1])
-    print(output[:10])
+    debug(output[:10])
 
 def compute_sums(nums):
     return [nums[i] + nums[j] for i in range(len(nums)) for j in range(i)]
@@ -305,14 +321,14 @@ if __name__ == '__main__':
     inputs = [random.randint(-1000,1000) for i in range(k)]
     inputs =   [-964, -769, -769, -114, 281, 742, 945]
     inputs.sort()
-    print(f"original numbers: {inputs}")
+    debug(f"original numbers: {inputs}")
 
     sums   = compute_sums(inputs)
     sums.sort()
-    print(f"sums: {sums}")
+    debug(f"sums: {sums}")
     random.shuffle(sums)
 
     outputs = solve(k, sums, inputs)
-    print(f"final numbers: {outputs}")
+    debug(f"final numbers: {outputs}")
     assert outputs == inputs
 
