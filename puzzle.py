@@ -166,9 +166,7 @@ def unnormalize(nums, translation, scale):
 
 def solve6(sums, nums = None):
     """@see solve()"""
-    sums, nums, translation, scale = normalize(sums, nums, 0, 0, 1, 1)
 
-    # ab = 0 and ac = 1
     ab = check(sums[0],  nums, _a, _b)
     ac = check(sums[1],  nums, _a, _c)
     ef = check(sums[-1], nums, _e, _f)
@@ -177,32 +175,31 @@ def solve6(sums, nums = None):
     abcdef = check(sum(sums)//5, nums, _a, _b, _c, _d, _e, _f)
 
     af = check((ab + ac + ef + df - abcdef), nums, _a, _f)
-    bd = check(df - af, nums, _b, _d)
-    cd = check(bd + 1,  nums, _c, _d)
-    ce = check(cd + ef - df, nums, _c, _e)
-    be = check(bd + ef - df, nums, _b, _e)
 
-    #*ab  *ac   ad   ae  *af        0   1   a+d   a+e   a+f
-    #      bc  *bd  *be   bf          1-2a  d-a   e-a   f-a
-    #          *cd  *ce   cf                d-a+1 e-a+1 f-a+1
-    #                de  *df                      d+e   d+f
-    #                    *ef                            e+f
+    bd = check(ab + df - af, nums, _b, _d)
+    be = check(ab + ef - af, nums, _b, _e)
+    ce = check(ac + ef - af, nums, _c, _e)
+    cd = check(ac + df - af, nums, _c, _d)
 
-    for entry in [ab,ac,af,bd,be,cd,ce,df,ef]:
-        sums.remove(entry)
+    #*ab  *ac   ad   ae  *af
+    #      bc  *bd  *be   bf
+    #          *cd  *ce   cf
+    #                de  *df
+    #                    *ef
+
+    for x in [ab, ac, af, bd, be, cd, ce, df, ef]:
+        sums.remove(x)
 
     # sums[:3] is {bc, ad, ae}
-    # af + abcdef - sum(sums[:3]) = af + abcdef - bc - ad - ae = 2f
-
     aabcde = check(sum(sums[:3]), nums, _a, _a, _b, _c, _d, _e)
-    a = check((aabcde + af - abcdef)//2, nums, _a)
+    a = check((aabcde - abcdef + af)//2, nums, _a)
     b = check(ab - a, nums, _b)
     c = check(ac - a, nums, _c)
     d = check(bd - b, nums, _d)
     e = check(be - b, nums, _e)
     f = check(af - a, nums, _f)
 
-    return unnormalize([a,b,c,d,e,f], translation, scale)
+    return [a,b,c,d,e,f]
 
 
 def solve7(sums, nums = None):
