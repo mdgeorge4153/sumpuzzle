@@ -13,7 +13,7 @@ from typing    import List, Optional
 _a, _b, _c, _d, _e, _f, _g = range(7)
 
 def debug(x):
-    print(x)
+    pass
 
 
 class UnderconstrainedError(Exception):
@@ -232,31 +232,52 @@ def solve7(sums, nums = None):
         ce = ac + eg - ag
         be = ab + eg - ag
         cf = ac + fg - ag
-        if set([bf,ce,be,cf]).issubset(set(sums)) and be <= bf <= cf and be <= ce <= cf:
-            candidates1.append((ag,be,bf,ce,cf))
-            try:
-                check(bf, nums, _b, _f)
-                check(ce, nums, _c, _e)
-                check(be, nums, _b, _e)
-                check(cf, nums, _c, _f)
-            except Exception:
-                pass
+        candidate = (ag,be,bf,ce,cf)
 
-    debug(f"--- there are {len(candidates1)} candidates for ag: {candidates1}")
+        # check that ag is a reasonable candidate
+        sumdup = [x for x in sums]
+        if not (be <= bf <= cf and be <= ce <= cf):
+            continue
+        try:
+            for entry in candidate:
+                sumdup.remove(entry)
+        except:
+            continue
+
+        if candidate not in candidates1:
+            candidates1.append(candidate)
+
+    # print duplicate candidates
+    if len(candidates1) != 1:
+        debug(f"nums: {nums}")
+        debug(f"unexpected number of ag candidates: {candidates1}")
+        debug('')
 
     candidates2 = []
     for ae in sums[3:7]:
         cg = ac + eg - ae
         af = ac + fg - cg
         bg = ab + fg - af
-        if set([cg, af, bg]).issubset(set(sums)) and ae <= af <= bg <= cg:
-            candidates2.append((ae, af, bg, cg))
-            check(ae, nums, _a, _e)
-            check(cg, nums, _c, _g)
-            check(af, nums, _a, _f)
-            check(bg, nums, _b, _g)
+        candidate = (ae,af,bg,cg)
 
-    debug(f"--- there are {len(candidates2)} candidates for ae: {candidates2}")
+        # check that ae is a reasonable candidate
+        sumdup = [x for x in sums]
+        if not (ae <= af <= bg <= cg):
+            continue
+        try:
+            for entry in candidate:
+                sumdup.remove(entry)
+        except:
+            continue
+
+        if candidate not in candidates2:
+            candidates2.append(candidate)
+
+    # print duplicate candidates
+    if len(candidates2) != 1:
+        debug(f"nums: {nums}")
+        debug(f"unexpected number of ae candidates: {candidates2}")
+        debug('')
 
     abcdefg = check(sum(sums)//6, nums, _a, _b, _c, _d, _e, _f, _g)
 
@@ -269,28 +290,36 @@ def solve7(sums, nums = None):
         for x in known:
             filtered.remove(x)
         debug(len(filtered))
-        abcd = check(sum(filtered[0:6])//3, nums, _a, _b, _c, _d)
+        abcd = sum(filtered[0:6])//3
 
         d = abcdefg - ag - bf - ce
         a = ab + ac + d - abcd
         b = ab - a
         c = ac - a
 
-        defg = check(sum(filtered[6:12])//3, nums, _d, _e, _f, _g)
+        defg = sum(filtered[6:12])//3
         g = fg + eg + d - defg
         e = eg - g
         f = fg - g
+        computed = compute_sums([a,b,c,d,e,f,g])
+        computed.sort()
+        assert sums == computed
         return [a,b,c,d,e,f,g]
 
     candidates = []
     for set1 in candidates1:
         for set2 in candidates2:
             try:
-                candidates.append(compute(set1,set2))
-            except Exception as e:
-                debug(e)
+                candidate = compute(set1, set2)
+                if candidate not in candidates:
+                    candidates.append(candidate)
+            except:
+                continue
 
-    debug(candidates)
+    if len(candidates) != 1:
+        print(f"nums: {nums}")
+        print(f"unexpected number of final candidates: {candidates}")
+        print()
 
     return candidates[0]
 
@@ -318,17 +347,17 @@ if __name__ == '__main__':
     k = int(sys.argv[1]) if len(sys.argv) > 1 else 7
 
     import random
-    inputs = [random.randint(-1000,1000) for i in range(k)]
-    inputs =   [-964, -769, -769, -114, 281, 742, 945]
-    inputs.sort()
-    debug(f"original numbers: {inputs}")
+    for i in range(100000):
+        inputs = [random.randint(-1000,1000) for i in range(k)]
+        inputs.sort()
+        debug(f"original numbers: {inputs}")
 
-    sums   = compute_sums(inputs)
-    sums.sort()
-    debug(f"sums: {sums}")
-    random.shuffle(sums)
+        sums   = compute_sums(inputs)
+        sums.sort()
+        debug(f"sums: {sums}")
+        random.shuffle(sums)
 
-    outputs = solve(k, sums, inputs)
-    debug(f"final numbers: {outputs}")
-    assert outputs == inputs
+        outputs = solve(k, sums, inputs)
+        debug(f"final numbers: {outputs}")
+        assert outputs == inputs
 
