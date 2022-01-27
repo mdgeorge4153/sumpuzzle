@@ -59,7 +59,7 @@ def solve(k : int, sums : List[int], nums : Optional[List[int]] = None):
         solve4,
         solve5,
         solve6,
-        solve7,
+        solve7_alt,
     ]
     if k > 7:
         raise NotImplemented()
@@ -319,6 +319,48 @@ def solve7(sums, nums = None):
         print()
 
     return candidates[0]
+
+def solve7_alt(sums, nums = None):
+    """@see solve()"""
+    ab = check(sums[0],  nums, _a, _b)
+    ac = check(sums[1],  nums, _a, _c)
+    fg = check(sums[-1], nums, _f, _g)
+    eg = check(sums[-2], nums, _e, _g)
+
+    abcdefg = check(sum(sums)//6, nums, _a, _b, _c, _d, _e, _f, _g)
+
+    # ab   ac   ad   ae   af   ag
+    #      bc   bd   be   bf   bg
+    #           cd   ce   cf   cg
+    #                de   df   dg
+    #                     ef   eg
+    #                          fg
+
+    def compute(bc):
+        a,b,c = solve3([ab,ac,bc])
+        ad = sums[2] if sums[2] != bc else sums[3]
+        d = ad - a
+        e = abcdefg - a - b - c - d - fg
+        g = eg - e
+        f = fg - g
+        if not (a <= b <= c <= d <= e <= f <= g):
+            return (0,)
+        return (a,b,c,d,e,f,g)
+
+    candidates = set()
+    for bc in sums[2:7]:
+        candidate  = compute(bc)
+        recomputed = compute_sums(candidate)
+        recomputed.sort()
+        if recomputed == sums:
+            candidates.add(candidate)
+
+    if len(candidates) != 1:
+        print(f"wrong number of candidates")
+        print(f"  nums: {nums}")
+        print(f"  candidates: {candidates}")
+
+    return list(candidates.pop())
 
 
 def summarize_diffs(sums):
