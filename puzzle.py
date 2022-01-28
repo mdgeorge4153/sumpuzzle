@@ -59,7 +59,7 @@ def solve(k : int, sums : List[int], nums : Optional[List[int]] = None):
         solve4,
         solve5,
         solve6,
-        solve7_alt,
+        solve7,
     ]
     if k > 7:
         raise NotImplemented()
@@ -209,124 +209,6 @@ def solve7(sums, nums = None):
     fg = check(sums[-1], nums, _f, _g)
     eg = check(sums[-2], nums, _e, _g)
 
-    # ab   ac   ad   ae   af   ag
-    #      bc   bd   be   bf   bg
-    #           cd   ce   cf   cg
-    #                de   df   dg
-    #                     ef   eg
-    #                          fg
-
-    # find candidates for ag:
-    #   - bf + ag = ab + fg
-    #   - ce + ag = ac + eg
-    #   - be + ag = ab + eg
-    #   - cf + ag = ac + fg
-    #   - i_ag ∈ [5,15]
-
-    candidates1 = []
-    for ag in sums[5:16]:
-        bf = ab + fg - ag
-        ce = ac + eg - ag
-        be = ab + eg - ag
-        cf = ac + fg - ag
-        candidate = (ag,be,bf,ce,cf)
-
-        # check that ag is a reasonable candidate
-        sumdup = [x for x in sums]
-        if not (be <= bf <= cf and be <= ce <= cf):
-            continue
-        try:
-            for entry in candidate:
-                sumdup.remove(entry)
-        except:
-            continue
-
-        if candidate not in candidates1:
-            candidates1.append(candidate)
-
-    # print duplicate candidates
-    if len(candidates1) != 1:
-        debug(f"nums: {nums}")
-        debug(f"unexpected number of ag candidates: {candidates1}")
-        debug('')
-
-    candidates2 = []
-    for ae in sums[3:7]:
-        cg = ac + eg - ae
-        af = ac + fg - cg
-        bg = ab + fg - af
-        candidate = (ae,af,bg,cg)
-
-        # check that ae is a reasonable candidate
-        sumdup = [x for x in sums]
-        if not (ae <= af <= bg <= cg):
-            continue
-        try:
-            for entry in candidate:
-                sumdup.remove(entry)
-        except:
-            continue
-
-        if candidate not in candidates2:
-            candidates2.append(candidate)
-
-    # print duplicate candidates
-    if len(candidates2) != 1:
-        debug(f"nums: {nums}")
-        debug(f"unexpected number of ae candidates: {candidates2}")
-        debug('')
-
-    abcdefg = check(sum(sums)//6, nums, _a, _b, _c, _d, _e, _f, _g)
-
-    def compute(set1, set2):
-        ag, be, bf, ce, cf = set1
-        ae, af, bg, cg     = set2
-        filtered = list(sums)
-        known = [ae, af, ag, be, bf, bg, ce, cf, cg]
-        debug(f'known values: {known}')
-        for x in known:
-            filtered.remove(x)
-        debug(len(filtered))
-        abcd = sum(filtered[0:6])//3
-
-        d = abcdefg - ag - bf - ce
-        a = ab + ac + d - abcd
-        b = ab - a
-        c = ac - a
-
-        defg = sum(filtered[6:12])//3
-        g = fg + eg + d - defg
-        e = eg - g
-        f = fg - g
-        computed = compute_sums([a,b,c,d,e,f,g])
-        computed.sort()
-        assert sums == computed
-        return [a,b,c,d,e,f,g]
-
-    candidates = []
-    for set1 in candidates1:
-        for set2 in candidates2:
-            try:
-                candidate = compute(set1, set2)
-                if candidate not in candidates:
-                    candidates.append(candidate)
-            except:
-                continue
-
-    if len(candidates) != 1:
-        print(f"nums: {nums}")
-        print(f"unexpected number of final candidates: {candidates}")
-        print()
-
-    return candidates[0]
-
-def solve7_alt(sums, nums = None):
-    """@see solve()"""
-    ab = check(sums[0],  nums, _a, _b)
-    ac = check(sums[1],  nums, _a, _c)
-    fg = check(sums[-1], nums, _f, _g)
-    eg = check(sums[-2], nums, _e, _g)
-
     abcdefg = check(sum(sums)//6, nums, _a, _b, _c, _d, _e, _f, _g)
 
     # ab   ac   ad   ae   af   ag
@@ -376,6 +258,7 @@ def summarize_diffs(sums):
     output = list(results.items())
     output.sort(key=lambda p: -p[1])
     debug(output[:10])
+
 
 def compute_sums(nums):
     return [nums[i] + nums[j] for i in range(len(nums)) for j in range(i)]
